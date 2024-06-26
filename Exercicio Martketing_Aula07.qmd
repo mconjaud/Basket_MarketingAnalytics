@@ -22,7 +22,7 @@ execute:
   cache: true
 ---
 
-# Exercicio em Grupo
+# Libraries Used for this exercise
 
 ```{r setup, include=FALSE}
 library(tidyverse)
@@ -31,7 +31,8 @@ library(httr)
 library(skimr)
 library(dplyr)
 library(lubridate)
-
+library(ggplot2)
+library(scales)
 ```
 
 
@@ -45,6 +46,21 @@ retail <- read_csv(url)
 
 Exploração Inicial da Base:
 
+```{r}
+itemList <- retail %>%
+  mutate(Description = Description %>% as.character()) %>% 
+  select(Description,CustomerID,Date) %>% 
+  nest_by(CustomerID,Date) %>% 
+  mutate(data = list(data %>% unlist())) %>% 
+  ungroup()
+
+tr <- as(itemList$data,"transactions")
+
+summary(tr)
+
+inspect(head(tr))
+
+```
 
 
 ```{r, include=FALSE}
@@ -57,9 +73,89 @@ retail %>% head()
 
 ### 1 - Quando os clientes compram (horário, dia de semana)?
 
+### 1.1 - Extrações de informações
+
+```{r}
+# Converter InvoiceDate para datetime
+retail$InvoiceDate <- ymd_hms(retail$InvoiceDate)
+
+# Extrair o dia da semana
+retail$DayOfWeek <- wday(retail$InvoiceDate, label = TRUE, abbr = FALSE)
+
+# Extrair a hora das compras
+retail$Hour <- hour(retail$InvoiceDate)
+
+# Categorizar em períodos do dia
+retail$PeriodOfDay <- case_when(
+  retail$Hour >= 6 & retail$Hour < 12 ~ "Morning",
+  retail$Hour >= 12 & retail$Hour < 18 ~ "Afternoon",
+  retail$Hour >= 18 & retail$Hour < 24 ~ "Evening",
+  TRUE ~ "Night"
+)
+```
+
+### 1.2 - Contagem de compras por dia da semana
+
+```{r}
+# Definir cores para o gráfico
+day_of_week_counts$Color <- "skyblue"
+day_of_week_counts$Color[which.max(day_of_week_counts$Count)] <- "lightgreen"
+day_of_week_counts$Color[which.min(day_of_week_counts$Count)] <- "red"
+
+# Plotar compras por dia da semana
+ggplot(day_of_week_counts, aes(x = reorder(DayOfWeek, -Count), y = Count, fill = Color)) +
+  geom_bar(stat = "identity") +
+  scale_fill_identity() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Purchases by Day of the Week", x = "Day of the Week", y = "Number of Purchases (in thousands)")
+```
+
+### 1.3 - Contagem de compras por período do dia
+
+```{r}
+# Definir cores para o gráfico
+hour_counts$Color <- "skyblue"
+hour_counts$Color[which.max(hour_counts$Count)] <- "lightgreen"
+hour_counts$Color[which.min(hour_counts$Count)] <- "red"
+
+# Plotar compras por hora do dia
+ggplot(hour_counts, aes(x = reorder(Hour, -Count), y = Count, fill = Color)) +
+  geom_bar(stat = "identity") +
+  scale_fill_identity() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Purchases by Hour of the Day", x = "Hour of the Day", y = "Number of Purchases (in thousands)")
+
+
+```
+
+### 1.4 - Contagem de compras por período do dia
+
+```{r}
+# Definir cores para o gráfico
+period_of_day_counts$Color <- "skyblue"
+period_of_day_counts$Color[which.max(period_of_day_counts$Count)] <- "lightgreen"
+period_of_day_counts$Color[which.min(period_of_day_counts$Count)] <- "red"
+
+# Plotar compras por período do dia
+ggplot(period_of_day_counts, aes(x = reorder(PeriodOfDay, -Count), y = Count, fill = Color)) +
+  geom_bar(stat = "identity") +
+  scale_fill_identity() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "Purchases by Period of the Day", x = "Period of the Day", y = "Number of Purchases (in thousands)")
+
+```
 
 ```{r, include=FALSE}
-
+retail %>% 
+  mutate(Date = as.Date(Date)) %>% 
+  mutate(Weekday = weekdays(Date)) %>% 
+  mutate(Hour = hour(Date)) %>% 
+  group_by(Weekday,Hour) %>% 
+  summarise(Count = n()) %>% 
+  ggplot(aes(x = Hour, y = Count, color = Weekday)) + 
+  geom_line() + 
+  labs(title = "Vendas por dia da semana e hora do dia", x = "Hora do dia", y = "Quantidade de vendas") + 
+  theme_minimal()
 ```
 
 ### 2 - Quantos produtos os clientes costumam comprar por transação?
