@@ -1,0 +1,94 @@
+---
+title: "Marketing Analytics - Exercicio em Grupo"
+authors:
+  - name: Michel Maurice Conjaud
+  - name: Hélio Pereira Oliveira
+  - name: Renan Cabral
+  - name: Tiago Evangelista Pardo
+format:
+  html:
+    code-fold: true
+    embed-resources: true
+    smooth-scroll: true
+    theme: cerulean
+    toc: true
+    toc-expand: true
+    toc-title: "Sumário"
+    toc_float: true
+
+execute:
+  freeze: true
+  warning: false
+  cache: true
+---
+
+# Exercicio em Grupo
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(arules)
+library(httr)
+library(skimr)
+library(dplyr)
+library(lubridate)
+
+```
+
+
+
+```{r}
+#Banco de dados colocado no Git
+url <- "https://raw.githubusercontent.com/mconjaud/Basket_MarketingAnalytics/main/retail.csv"
+
+retail <- read_csv(url)
+```
+
+Exploração Inicial da Base:
+
+
+
+```{r, include=FALSE}
+retail %>% skim()
+```
+
+```{r}
+retail %>% head()
+```
+
+### 1 - Quando os clientes compram (horário, dia de semana)?
+
+
+```{r, include=FALSE}
+
+```
+
+### 2 - Quantos produtos os clientes costumam comprar por transação?
+
+```{r}
+
+```
+
+### 3 - Quais são os top 10 produtos vendidos?
+
+```{r}
+
+```
+
+### 4 - Criar regras de associação para a base
+
+```{r}
+
+```
+
+### 5 -Escolher um tipo de produto (pode ser top10 ou por algum outro critério de seleção) e descrever as regras de associação válidas. Distribuição demográfica por tipo de oferta:
+
+```{r}
+
+```
+
+### 6- Como poderiamos aumentar as vendas deste produto para esse tipo de cliente?
+
+```{r}
+
+```
+
