@@ -59,16 +59,6 @@ tr <- as(itemList$data,"transactions")
 summary(tr)
 
 inspect(head(tr))
-
-```
-
-
-```{r, include=FALSE}
-retail %>% skim()
-```
-
-```{r}
-retail %>% head()
 ```
 
 ### 1 - Quando os clientes compram (horário, dia de semana)?
@@ -97,6 +87,12 @@ retail$PeriodOfDay <- case_when(
 ### 1.2 - Contagem de compras por dia da semana
 
 ```{r}
+# Count purchases by day of the week
+day_of_week_counts <- retail %>%
+  group_by(DayOfWeek) %>%
+  summarise(Count = n())
+
+
 # Definir cores para o gráfico
 day_of_week_counts$Color <- "skyblue"
 day_of_week_counts$Color[which.max(day_of_week_counts$Count)] <- "lightgreen"
@@ -113,6 +109,11 @@ ggplot(day_of_week_counts, aes(x = reorder(DayOfWeek, -Count), y = Count, fill =
 ### 1.3 - Contagem de compras por período do dia
 
 ```{r}
+# Count purchases by hour of the day
+hour_counts <- retail %>%
+  group_by(Hour) %>%
+  summarise(Count = n())
+
 # Definir cores para o gráfico
 hour_counts$Color <- "skyblue"
 hour_counts$Color[which.max(hour_counts$Count)] <- "lightgreen"
@@ -131,6 +132,10 @@ ggplot(hour_counts, aes(x = reorder(Hour, -Count), y = Count, fill = Color)) +
 ### 1.4 - Contagem de compras por período do dia
 
 ```{r}
+# Count purchases by period of the day
+period_of_day_counts <- retail %>%
+  group_by(PeriodOfDay) %>%
+  summarise(Count = n())
 # Definir cores para o gráfico
 period_of_day_counts$Color <- "skyblue"
 period_of_day_counts$Color[which.max(period_of_day_counts$Count)] <- "lightgreen"
@@ -148,33 +153,89 @@ ggplot(period_of_day_counts, aes(x = reorder(PeriodOfDay, -Count), y = Count, fi
 ### 2 - Quantos produtos os clientes costumam comprar por transação?
 
 ```{r}
-# Contar a quantidade de produtos por transação
-products_per_transaction <- itemList %>%
+# Calcular a quantidade de produtos por transação
+transaction_counts <- retail %>%
   group_by(InvoiceNo) %>%
-  summarise(Products = n_distinct(StockCode))
+  summarise(Number_of_Products = n())
+
+# Calcular a média de produtos por transação
+mean_products_per_transaction <- mean(transaction_counts$Number_of_Products)
+
+# Exibir a média
+print(mean_products_per_transaction)
+
+
 ```
 
 ### 3 - Quais são os top 10 produtos vendidos?
 
 ```{r}
+# Calcular a quantidade de cada produto vendido
+product_sales <- retail %>%
+  group_by(Description) %>%
+  summarise(Total_Sold = sum(Quantity, na.rm = TRUE))
 
+# Ordenar os produtos pela quantidade vendida e selecionar os 10 mais vendidos
+top_10_products <- product_sales %>%
+  arrange(desc(Total_Sold)) %>%
+  slice(1:10)
+
+# Exibir os nomes dos 10 produtos mais vendidos
+top_10_product_names <- top_10_products$Description
+print(top_10_product_names)
 ```
 
 ### 4 - Criar regras de associação para a base
 
 ```{r}
+# Gerar regras de associação
+rules <- apriori(tr, parameter = list(supp = 0.01, conf = 0.8))
+
+# Resumo das regras geradas
+summary(rules)
+
+# Exibir as principais regras
+inspect(head(sort(rules, by = "lift"), 10))
 
 ```
 
-### 5 -Escolher um tipo de produto (pode ser top10 ou por algum outro critério de seleção) e descrever as regras de associação válidas. Distribuição demográfica por tipo de oferta:
+### 5 -Escolher um tipo de produto (pode ser top10 ou por algum outro critério de seleção) e descrever as regras de associação válidas. Distribuição demográfica por tipo de oferta.
+
+## 5.1 - Produto escolhido o numero 1 da lista de mais vendidos "PAPER CRAFT , LITTLE BIRDIE"
 
 ```{r}
+# Gerar regras de associação que envolvem o produto específico
+rules <- apriori(tr, parameter = list(supp = 001, conf = 0.8),
+                 appearance = list(default = "lhs", rhs = "PAPER CRAFT , LITTLE BIRDIE"))
 
+# Resumo das regras geradas
+summary(rules)
+
+# Exibir as principais regras
+inspect(head(sort(rules, by = "lift"), 10))
 ```
 
 ### 6- Como poderiamos aumentar as vendas deste produto para esse tipo de cliente?
 
-```{r}
 
-```
+     Estratégias de Marketing
+- Ofertas Combinadas (Bundles):
 
+  Criação de Pacotes Promocionais: Ofereça "PAPER CRAFT , LITTLE BIRDIE" junto com os produtos associados em um pacote promocional com desconto.
+  Exemplo: Um pacote que inclua "PAPER CRAFT , LITTLE BIRDIE", "GLUE STICKS", e "CRAFT SCISSORS" com um desconto especial.
+
+- Cross-Selling:
+
+  Recomendações de Produtos: Use a análise de regras de associação para recomendar produtos frequentemente comprados junto com "PAPER CRAFT , LITTLE BIRDIE".
+  Exemplo: Na página do produto "PAPER CRAFT , LITTLE BIRDIE", exibir recomendações de produtos como "GLUE STICKS" e "CRAFT SCISSORS".
+
+- Descontos e Promoções:
+
+  Ofertas de Desconto: Ofereça descontos em produtos associados quando comprados junto com "PAPER CRAFT , LITTLE BIRDIE".
+  Exemplo: 10% de desconto em "GLUE STICKS" e "CRAFT SCISSORS" ao comprar "PAPER CRAFT , LITTLE BIRDIE".
+
+- Programas de Fidelidade:
+
+  Pontos de Fidelidade: Dê pontos de fidelidade extras para compras de produtos associados.
+  Exemplo: Ganhe pontos de fidelidade dobrados ao comprar "PAPER CRAFT , LITTLE BIRDIE" e produtos associados.
+---
