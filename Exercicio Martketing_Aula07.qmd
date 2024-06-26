@@ -145,23 +145,13 @@ ggplot(period_of_day_counts, aes(x = reorder(PeriodOfDay, -Count), y = Count, fi
 
 ```
 
-```{r, include=FALSE}
-retail %>% 
-  mutate(Date = as.Date(Date)) %>% 
-  mutate(Weekday = weekdays(Date)) %>% 
-  mutate(Hour = hour(Date)) %>% 
-  group_by(Weekday,Hour) %>% 
-  summarise(Count = n()) %>% 
-  ggplot(aes(x = Hour, y = Count, color = Weekday)) + 
-  geom_line() + 
-  labs(title = "Vendas por dia da semana e hora do dia", x = "Hora do dia", y = "Quantidade de vendas") + 
-  theme_minimal()
-```
-
 ### 2 - Quantos produtos os clientes costumam comprar por transação?
 
 ```{r}
-
+# Contar a quantidade de produtos por transação
+products_per_transaction <- itemList %>%
+  group_by(InvoiceNo) %>%
+  summarise(Products = n_distinct(StockCode))
 ```
 
 ### 3 - Quais são os top 10 produtos vendidos?
